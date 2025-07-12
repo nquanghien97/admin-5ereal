@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, ComponentType } from 'react';
+import React, { useEffect, useRef } from 'react';
+import type { ComponentType } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../hooks/useNotification';
 import { parseJwt } from '../utils/parseJwt';
