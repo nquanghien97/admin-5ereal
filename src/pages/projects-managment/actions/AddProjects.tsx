@@ -20,7 +20,6 @@ interface FormValues {
   floorHeightMax: string;
   numberOfUnits: string;
   type: string;
-
 }
 
 function AddProjects(props: AddProjectsProps) {
