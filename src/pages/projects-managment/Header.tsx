@@ -12,7 +12,6 @@ function Header(props: HeaderProps) {
   const [form] = Form.useForm();
 
   const onFinish = async (data: SearchFormType) => {
-    console.log(data)
     setLoading(true);
     setSearchForm(pre => ({...pre, ...data}));
   }
@@ -25,7 +24,7 @@ function Header(props: HeaderProps) {
           name="search"
         >
           <Input
-            placeholder="Tìm kiếm tiêu đề"
+            placeholder="Tìm kiếm dự án"
             className="!py-2"
             rootClassName="!border-[1px] !border-[#84571B] !rounded-lg"
             allowClear

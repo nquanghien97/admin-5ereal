@@ -10,7 +10,7 @@ function Layout() {
   const navigate = useNavigate();
 
   const logOut = () => {
-    Cookies.remove('token');
+    Cookies.remove('accessToken');
     navigate('/login');
     setMe(null);
   }

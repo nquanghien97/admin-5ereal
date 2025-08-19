@@ -8,8 +8,8 @@ export function getUsers({ page, pageSize, search }: { page?: number, pageSize?:
   return api.get(`/users?${params.toString()}`)
 }
 
-export function createUser({ username, fullName, password } : { username: string, fullName: string, password: string }) {
-  return api.post('/users', { username, fullName, password })
+export function createUser({ phoneNumber, fullName, password } : { phoneNumber: string, fullName: string, password: string }) {
+  return api.post('/users', { phoneNumber, fullName, password })
 }
 
 export function updateUser({ id, fullName } : { id: number, fullName?: string }) {

@@ -12,8 +12,9 @@ type NotificationType  = 'success' | 'error' | 'info' | 'warning'
 export const NotificationContext = createContext<NotificationService | null>(null);
 
 export const NotificationProvider = ({ children } : { children: React.ReactNode}) => {
+  const [api, contextHolder] = notification.useNotification()
   const openNotification = (type: NotificationType, message: string, description?: string) => {
-    notification[type]({ message, description, showProgress: true });
+    api[type]({ message, description, showProgress: true });
   };
 
   const notificationService = {
@@ -25,6 +26,7 @@ export const NotificationProvider = ({ children } : { children: React.ReactNode}
 
   return (
     <NotificationContext.Provider value={notificationService}>
+      {contextHolder}
       {children}
     </NotificationContext.Provider>
   );

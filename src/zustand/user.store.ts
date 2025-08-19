@@ -14,7 +14,7 @@ export const useUserStore = create<UserStoreType>()((set) => ({
   me: null,
   getMe: async () => {
     try {
-      const token = Cookies.get('token');
+      const token = Cookies.get('accessToken');
       const dataParse = parseJwt(token || '')
       if(dataParse.userId) {
         const res = await getMe()

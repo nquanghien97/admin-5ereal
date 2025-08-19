@@ -16,7 +16,7 @@ function withAuth<P extends object>(
 
     useEffect(() => {
       const checkAuth = () => {
-        const token = Cookies.get('token') as string;
+        const token = Cookies.get('accessToken') as string;
         const isAuthenticated = !!token;
         const user = parseJwt(token);
 

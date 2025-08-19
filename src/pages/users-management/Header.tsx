@@ -1,6 +1,6 @@
 import { Button, Form, Input, Tooltip } from "antd";
 import SearchIcon from "../../assets/icons/SearchIcon";
-import type { SearchFormType } from ".";
+import type { SearchFormType } from "../../types/searchForm";
 
 interface HeaderProps {
   setSearchForm: React.Dispatch<React.SetStateAction<SearchFormType>>
@@ -12,22 +12,20 @@ function Header(props: HeaderProps) {
   const [form] = Form.useForm();
 
   const onFinish = async (data: SearchFormType) => {
-    console.log(data)
     setLoading(true);
-    setSearchForm(pre => ({...pre, ...data}));
+    setSearchForm(pre => ({ ...pre, ...data }));
   }
 
   return (
     <Form onFinish={onFinish} className="flex py-2 justify-between" form={form}>
       <div className="flex gap-2 items-center">
         <Form.Item
-          className="w-[160px]"
           name="search"
         >
           <Input
-            placeholder="Tìm kiếm tiêu đề"
-            className="!py-2"
-            rootClassName="!border-[1px] !border-[#84571B] !rounded-lg"
+            placeholder="Tìm kiếm tên, tài khoản"
+            className="py-2"
+            rootClassName="border-[1px] border-[#84571B] rounded-lg"
             allowClear
           />
         </Form.Item>

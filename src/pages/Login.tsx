@@ -34,7 +34,7 @@ function Login() {
         notification.warning("Bạn không có quyền truy cập")
         return;
       }
-      Cookies.set('token', data.accessToken);
+      Cookies.set('accessToken', data.accessToken);
       await getMe()
       notification.success("Đăng nhập thành công")
       navigate('/')

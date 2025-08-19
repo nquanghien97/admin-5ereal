@@ -10,5 +10,11 @@ export const MenuSidebar = [
     title: 'Quản lý người dùng',
     path: 'quan-ly-nguoi-dung',
     allowRole: ['ADMIN']
+  },
+  {
+    key: 3,
+    title: 'Quản lý dự án',
+    path: 'quan-ly-du-an',
+    allowRole: ['ADMIN']
   }
 ]

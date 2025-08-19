@@ -1,40 +1,44 @@
 import type { TableColumnsType } from 'antd'
 import { Button, Table, ConfigProvider, Image } from 'antd'
 import { useEffect, useState } from 'react';
-import type { NewsEntity } from '../../entities/News';
+import type { ProjectsEntity } from '../../entities/projects';
 import CloseIcon from '../../assets/icons/CloseIcon';
 import PlusIcon from '../../assets/icons/PlusIcon';
-import AddNews from './actions/AddNews';
-import UpdateNews from './actions/UpdateNews';
-import DeleteNews from './actions/DeleteNews';
-import { getAllNews } from '../../services/news';
+import AddProjects from './actions/AddProjects';
+import UpdateProjects from './actions/UpdateProjects';
+import DeleteProjects from './actions/DeleteProjects';
+import { getAllProjects } from '../../services/projects';
 import withAuth from '../../hocs/withAuth';
 import { formatDate } from '../../utils/formatDate';
 import ArticleIcon from '../../assets/icons/ArticleIcon';
 import Header from './Header';
 
 export interface SearchFormType {
-  search?: string;
+  title?: string;
+  dateStart?: string;
+  dateEnd?: string;
   page?: number;
   pageSize?: number;
 }
 
 
-function News() {
+function Projects() {
 
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<NewsEntity[]>([]);
+  const [data, setData] = useState<ProjectsEntity[]>([]);
   const [searchForm, setSearchForm] = useState<SearchFormType>({
     page: 1,
     pageSize: 10,
-    search: '',
+    title: '',
+    dateStart: '',
+    dateEnd: ''
   })
   const [total, setToal] = useState(0);
   const [refreshKey, setRefreshKey] = useState(false);
-  const [idNews, setIdNews] = useState(-1);
+  const [idProjects, setIdProjects] = useState(-1);
 
   useEffect(() => {
     document.title = "Tin tức"
@@ -52,24 +56,103 @@ function News() {
       }
     },
     {
-      title: "Tiêu đề",
+      title: "Tên dự án",
       key: 2,
+      dataIndex: 'name',
       width: 200,
-      render(_, record) {
+      render(value) {
         return (
           <div className="flex items-center gap-4">
-            <p>{record.title}</p>
+            <p>{value}</p>
           </div>
         )
       }
     },
     {
-      title: "Nội dung",
+      title: "Vị trí",
       key: 3,
       width: 300,
-      render(_, record) {
+      dataIndex: 'location',
+      render(value) {
         return (
-          <div className="max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap" dangerouslySetInnerHTML={{ __html: record.content }} />
+          <div className="">{value}</div>
+        )
+      }
+    },
+    {
+      title: "Diện tích",
+      key: 4,
+      width: 300,
+      dataIndex: 'totalArea',
+      render(value) {
+        return (
+          <div className="">{value}</div>
+        )
+      }
+    },
+    {
+      title: "Mật độ xây dựng",
+      key: 3,
+      width: 300,
+      dataIndex: 'constructionRate',
+      render(value) {
+        return (
+          <div className="">{value}</div>
+        )
+      }
+    },
+    {
+      title: "Số tầng thấp nhất",
+      key: 3,
+      width: 300,
+      dataIndex: 'floorHeightMin',
+      render(value) {
+        return (
+          <div className="">{value}</div>
+        )
+      }
+    },
+    {
+      title: "Số tầng cao nhất",
+      key: 3,
+      width: 300,
+      dataIndex: 'floorHeightMax',
+      render(value) {
+        return (
+          <div className="">{value}</div>
+        )
+      }
+    },
+    {
+      title: "Loại hình BĐS",
+      key: 3,
+      width: 300,
+      dataIndex: 'type',
+      render(value) {
+        return (
+          <div className="">{value}</div>
+        )
+      }
+    },
+    {
+      title: "Tổng số căn",
+      key: 3,
+      width: 300,
+      dataIndex: 'numberOfUnits',
+      render(value) {
+        return (
+          <div className="">{value}</div>
+        )
+      }
+    },
+    {
+      title: "Chủ đầu tư",
+      key: 3,
+      width: 300,
+      dataIndex: 'investor',
+      render(value) {
+        return (
+          <div className="">{value}</div>
         )
       }
     },
@@ -94,6 +177,16 @@ function News() {
       }
     },
     {
+      title: "Nội dung",
+      key: 3,
+      width: 300,
+      render(_, record) {
+        return (
+          <div className="max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap" dangerouslySetInnerHTML={{ __html: record.content }} />
+        )
+      }
+    },
+    {
       title: "Thao tác",
       dataIndex: 5,
       width: 200,
@@ -104,7 +197,7 @@ function News() {
               className="flex items-center"
               onClick={() => {
                 setOpenEditModal(true)
-                setIdNews(record.id)
+                setIdProjects(record.id)
               }
               }
             >
@@ -124,7 +217,7 @@ function News() {
                 className="w-full"
                 onClick={() => {
                   setOpenDeleteModal(true)
-                  setIdNews(record.id)
+                  setIdProjects(record.id)
                 }}
               >
                 <p>Xóa</p>
@@ -140,7 +233,7 @@ function News() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await getAllNews(searchForm);
+        const res = await getAllProjects(searchForm);
         setData(res.data.data);
         setToal(res.data.paging.total)
       } catch (err) {
@@ -161,7 +254,7 @@ function News() {
       <Header setSearchForm={setSearchForm} setLoading={setLoading} />
       <div className="flex mb-4">
         <div className="m-auto">
-          <span className="px-6 p-2 rounded-full bg-[#84571B] uppercase font-bold text-white text-2xl">Quản lý Tin tức</span>
+          <span className="px-6 p-2 rounded-full bg-[#84571B] uppercase text-white font-bold text-2xl">Quản lý Dự án</span>
         </div>
         <div
           className="bg-[#84571B] rounded-md cursor-pointer h-full px-4 py-2 flex items-center justify-center hover:opacity-80 duration-300 text-white"
@@ -202,13 +295,13 @@ function News() {
           scroll={{ y: 600 }}
         />
       </ConfigProvider>
-      {openAddModal && <AddNews open={openAddModal} onClose={() => setOpenAddModal(false)} setRefreshKey={setRefreshKey} />}
-      {openEditModal && <UpdateNews open={openEditModal} onClose={() => setOpenEditModal(false)} id={idNews} setRefreshKey={setRefreshKey} />}
-      {openDeleteModal && <DeleteNews open={openDeleteModal} onCancel={() => setOpenDeleteModal(false)} id={idNews} setRefreshKey={setRefreshKey} />}
+      {openAddModal && <AddProjects open={openAddModal} onClose={() => setOpenAddModal(false)} setRefreshKey={setRefreshKey} />}
+      {openEditModal && <UpdateProjects open={openEditModal} onClose={() => setOpenEditModal(false)} id={idProjects} setRefreshKey={setRefreshKey} />}
+      {openDeleteModal && <DeleteProjects open={openDeleteModal} onCancel={() => setOpenDeleteModal(false)} id={idProjects} setRefreshKey={setRefreshKey} />}
     </div>
   )
 }
 
-const NewsWithAuth = withAuth(News)
+const ProjectsWithAuth = withAuth(Projects)
 
-export default NewsWithAuth
+export default ProjectsWithAuth

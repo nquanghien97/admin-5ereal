@@ -9,7 +9,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     
-    const token = Cookies.get('token');
+    const token = Cookies.get('accessToken');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -28,7 +28,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Token hết hạn hoặc không hợp lệ
       // handleLogout();
-      Cookies.remove('token')
+      Cookies.remove('accessToken')
       return Promise.reject(new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'));
     }
     return Promise.reject(error);
