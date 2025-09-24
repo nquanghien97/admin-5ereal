@@ -22,5 +22,9 @@ export function updateNews(id: number, data: FormData) {
 
 export function deleteNews(id: number) {
   return api.delete(`/news/${id}`)
-} 
+}
+
+export function uploadImageNews(data: FormData) {
+  return api.post('/upload-images-news', data)
+}
 

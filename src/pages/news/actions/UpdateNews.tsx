@@ -1,10 +1,11 @@
 import { Button, Form, Input, Modal, Image } from "antd";
-import { getNews, updateNews } from "../../../services/news";
-import { useEffect, useState } from "react";
+import { getNews, updateNews, uploadImageNews } from "../../../services/news";
+import { useEffect, useRef, useState } from "react";
 import type { NewsEntity } from "../../../entities/News";
 import { useNotification } from "../../../hooks/useNotification";
-import { Editor } from "@tinymce/tinymce-react";
 import { useNavigate } from "react-router-dom";
+import { Editor } from "@tinymce/tinymce-react";
+import type { Editor as TinyMCEEditor } from "tinymce";
 
 interface EditNewsProps {
   open: boolean;
@@ -17,8 +18,18 @@ interface FormValues {
   title: string;
 }
 
+interface BlobInfo {
+  blob(): Blob;
+  filename(): string;
+  base64(): string;
+}
+
+type UploadSuccessCallback = (url: string) => void;
+type UploadFailureCallback = (message: string, options?: { remove?: boolean }) => void;
+
 function UpdateNews(props: EditNewsProps) {
   const { open, onClose, id, setRefreshKey } = props;
+  const editorRef = useRef<TinyMCEEditor | null>(null);
 
   const [form] = Form.useForm();
 
@@ -30,7 +41,7 @@ function UpdateNews(props: EditNewsProps) {
   const notification = useNotification();
   const navigate = useNavigate();
   useEffect(() => {
-    (async() => {
+    (async () => {
       const res = await getNews(id)
       const data = res.data.data as NewsEntity
       setDataNews(res.data.data)
@@ -45,7 +56,7 @@ function UpdateNews(props: EditNewsProps) {
     const newFiles = e.target.files[0]
     try {
       setFile(newFiles)
-    } catch(err) {
+    } catch (err) {
       console.log(err)
     }
   }
@@ -74,7 +85,9 @@ function UpdateNews(props: EditNewsProps) {
       setLoading(false);
     }
   }
-  if(!dataNews) return;
+  if (!dataNews) return;
+
+  console.log(content);
 
   return (
     <Modal
@@ -133,6 +146,7 @@ function UpdateNews(props: EditNewsProps) {
               apiKey="hkoepxco9p2gme5kius6axtlk3n83yberu5a59m56l7dhgn3"
               value={content}
               onEditorChange={(newContent) => setContent(newContent)}
+              onInit={(_, editor) => editorRef.current = editor}
               init={{
                 height: 400,
                 width: 1000,
@@ -143,18 +157,54 @@ function UpdateNews(props: EditNewsProps) {
                   'advlist autolink lists link image charmap print preview anchor',
                   'searchreplace visualblocks code fullscreen',
                   'insertdatetime media paste code help wordcount textcolor',
-                  'table',
-                  'media',
+                  'table media paste',
                 ],
                 toolbar:
                   'undo redo | formatselect | bold italic backcolor | ' +
                   'alignleft aligncenter alignright alignjustify | ' +
-                  'bullist numlist outdent indent | table | forecolor | removeformat | media',
+                  'bullist numlist outdent indent | table | forecolor | removeformat | ' +
+                  'image media',
                 setup: (editor: { on: (arg0: string, arg1: () => void) => void; setContent: (arg0: string) => void; }) => {
                   editor.on('init', () => {
                     editor.setContent(dataNews?.content)
                   })
-                }
+                },
+                images_upload_handler: async (blobInfo: BlobInfo, success: UploadSuccessCallback, failure: UploadFailureCallback) => {
+                  try {
+                    const base64Src = `data:${blobInfo.blob().type};base64,${blobInfo.base64()}`;
+
+                    const formData = new FormData();
+                    formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                    const res = await uploadImageNews(formData);
+                    const data = res.data;
+                    const imageUrl = `http://localhost:3000/api${data.url}`;
+
+                    // MANUAL REPLACEMENT nếu success() không hoạt động
+                    if (editorRef.current) {
+                      const editor = editorRef.current;
+                      const currentContent = editor.getContent();
+
+                      // Thay thế base64 bằng URL
+                      const updatedContent = currentContent.replace(base64Src, imageUrl);
+
+                      if (updatedContent !== currentContent) {
+                        console.log('Manually replacing base64 with URL');
+                        editor.setContent(updatedContent);
+                        setContent(updatedContent);
+                      }
+                    }
+
+                    // Vẫn gọi success để TinyMCE biết upload thành công
+                    success(imageUrl);
+                  } catch (err) {
+                    failure('Upload failed: ' + (err as Error).message);
+                  }
+                },
+                paste_data_images: true,
+                automatic_uploads: true,        // Tự động upload
+                images_reuse_filename: true,    // Giữ tên file gốc
+                images_upload_url: false,
               }}
             />
           </div>
