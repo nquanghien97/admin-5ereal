@@ -178,7 +178,7 @@ function UpdateNews(props: EditNewsProps) {
 
                     const res = await uploadImageNews(formData);
                     const data = res.data;
-                    const imageUrl = `http://localhost:3000/api${data.url}`;
+                    const imageUrl = `${import.meta.env.VITE_API_URL}${data.url}`;
 
                     // MANUAL REPLACEMENT nếu success() không hoạt động
                     if (editorRef.current) {

@@ -22,5 +22,9 @@ export function updateProjects(id: number, data: FormData) {
 
 export function deleteProjects(id: number) {
   return api.delete(`/projects/${id}`)
-} 
+}
+
+export function uploadImageProjects(data: FormData) {
+  return api.post('/upload-images-projects', data)
+}
 

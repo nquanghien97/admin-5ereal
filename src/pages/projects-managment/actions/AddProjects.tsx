@@ -1,9 +1,10 @@
 import { Editor } from "@tinymce/tinymce-react";
 import { Button, Form, Input, Modal, Image } from "antd";
-import { useState } from "react";
-import { createProjects } from "../../../services/projects";
+import { useRef, useState } from "react";
+import { createProjects, uploadImageProjects } from "../../../services/projects";
 import { useNotification } from "../../../hooks/useNotification";
 import { useNavigate } from "react-router-dom";
+import type { Editor as TinyMCEEditor } from "tinymce";
 
 interface AddProjectsProps {
   open: boolean;
@@ -22,12 +23,23 @@ interface FormValues {
   type: string;
 }
 
+interface BlobInfo {
+  blob(): Blob;
+  filename(): string;
+  base64(): string;
+}
+
+type UploadSuccessCallback = (url: string) => void;
+type UploadFailureCallback = (message: string, options?: { remove?: boolean }) => void;
+
 function AddProjects(props: AddProjectsProps) {
   const { open, onClose, setRefreshKey } = props;
 
   const [file, setFile] = useState<File>();
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+
+  const editorRef = useRef<TinyMCEEditor | null>(null);
 
   const [form] = Form.useForm();
   const notification = useNotification();
@@ -269,7 +281,43 @@ function AddProjects(props: AddProjectsProps) {
                 toolbar:
                   'undo redo | formatselect | bold italic backcolor | ' +
                   'alignleft aligncenter alignright alignjustify | ' +
-                  'bullist numlist outdent indent | table | forecolor | removeformat | media |image'
+                  'bullist numlist outdent indent | table | forecolor | removeformat | media |image',
+                images_upload_handler: async (blobInfo: BlobInfo, success: UploadSuccessCallback, failure: UploadFailureCallback) => {
+                  try {
+                    const base64Src = `data:${blobInfo.blob().type};base64,${blobInfo.base64()}`;
+
+                    const formData = new FormData();
+                    formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                    const res = await uploadImageProjects(formData);
+                    const data = res.data;
+                    const imageUrl = `${import.meta.env.VITE_API_URL}${data.url}`;
+
+                    // MANUAL REPLACEMENT nếu success() không hoạt động
+                    if (editorRef.current) {
+                      const editor = editorRef.current;
+                      const currentContent = editor.getContent();
+
+                      // Thay thế base64 bằng URL
+                      const updatedContent = currentContent.replace(base64Src, imageUrl);
+
+                      if (updatedContent !== currentContent) {
+                        console.log('Manually replacing base64 with URL');
+                        editor.setContent(updatedContent);
+                        setContent(updatedContent);
+                      }
+                    }
+
+                    // Vẫn gọi success để TinyMCE biết upload thành công
+                    success(imageUrl);
+                  } catch (err) {
+                    failure('Upload failed: ' + (err as Error).message);
+                  }
+                },
+                paste_data_images: true,
+                automatic_uploads: true,        // Tự động upload
+                images_reuse_filename: true,    // Giữ tên file gốc
+                images_upload_url: false,
               }}
             />
           </div>

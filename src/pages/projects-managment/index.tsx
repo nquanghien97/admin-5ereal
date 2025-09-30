@@ -41,7 +41,7 @@ function Projects() {
   const [idProjects, setIdProjects] = useState(-1);
 
   useEffect(() => {
-    document.title = "Tin tức"
+    document.title = "Dự án"
   }, []);
 
   const columns: TableColumnsType = [
