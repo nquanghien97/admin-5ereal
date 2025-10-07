@@ -19,10 +19,10 @@
   background: linear-gradient(to right, #0D2D95, #0C63C6);
 }
 
-.ant-modal-content {
+/* .ant-modal-content {
   background: linear-gradient(to right, rgba(235, 201, 130, 0.3), rgba(251, 248, 208, 0.3), rgba(225, 183, 84, 0.3), rgba(243, 200, 109, 0.3));
   padding: 0 !important;
-}
+} */
 
 .custom-bg {
   background: linear-gradient(to right, rgba(235, 201, 130, 0.6), rgba(251, 248, 208, 0.6), rgba(225, 183, 84, 0.6), rgba(243, 200, 109, 0.6));
@@ -48,3 +48,20 @@
   display: flex;
 }
 
+.background-linear-blue {
+  background: linear-gradient(
+    to top,
+    rgba(20, 67, 97, 0.8),
+    rgba(20, 67, 97, 0.8),
+    rgba(166, 200, 217, 0)
+  );
+}
+
+.ant-form-item-required {
+  width: 120px;
+}
+
+.ant-image {
+  height: 100%;
+  width: 100%;
+}

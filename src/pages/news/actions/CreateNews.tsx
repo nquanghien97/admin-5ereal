@@ -6,14 +6,9 @@ import PlusIcon from "../../../assets/icons/PlusIcon";
 import type { NewsSectionEntity } from "../../../entities/news";
 import { Editor } from "@tinymce/tinymce-react";
 import MinusIcon from "../../../assets/icons/MinusIcon";
-import { updateNews } from "../../../services/news";
-import { useParams } from "react-router-dom";
+import { createNews } from "../../../services/news";
 
-function UpdateNews() {
-
-  const { id } = useParams()
-
-  // const [currentNews, setCurrentNews] = useState<NewsSectionEntity[]>([])
+function CreateNews() {
 
   const [isHotNews, setIsHotNews] = useState(false);
   const [title, setTitle] = useState('');
@@ -45,9 +40,7 @@ function UpdateNews() {
           formData.append(`section_image_${i}`, s.image);
         }
       });
-      if(id) {
-        await updateNews(Number(id), formData)
-      }
+      await createNews(formData)
     } catch (err) {
       console.log(err)
     }
@@ -164,4 +157,4 @@ function UpdateNews() {
   )
 }
 
-export default UpdateNews
+export default CreateNews

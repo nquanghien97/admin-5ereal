@@ -1,17 +1,16 @@
 import type { TableColumnsType } from 'antd'
 import { Button, Table, ConfigProvider, Image } from 'antd'
 import { useEffect, useState } from 'react';
-import type { NewsEntity } from '../../entities/News';
+import type { NewsEntity } from '../../entities/news';
 import CloseIcon from '../../assets/icons/CloseIcon';
 import PlusIcon from '../../assets/icons/PlusIcon';
-import AddNews from './actions/AddNews';
-import UpdateNews from './actions/UpdateNews';
 import DeleteNews from './actions/DeleteNews';
 import { getAllNews } from '../../services/news';
 import withAuth from '../../hocs/withAuth';
 import { formatDate } from '../../utils/formatDate';
 import ArticleIcon from '../../assets/icons/ArticleIcon';
 import Header from './Header';
+import { Link } from 'react-router-dom';
 
 export interface SearchFormType {
   search?: string;
@@ -19,12 +18,9 @@ export interface SearchFormType {
   pageSize?: number;
 }
 
-
 function News() {
 
-  const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openAddModal, setOpenAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<NewsEntity[]>([]);
   const [searchForm, setSearchForm] = useState<SearchFormType>({
@@ -69,7 +65,7 @@ function News() {
       width: 300,
       render(_, record) {
         return (
-          <div className="max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap" dangerouslySetInnerHTML={{ __html: record.content }} />
+          <div className="max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap" dangerouslySetInnerHTML={{ __html: record.summary }} />
         )
       }
     },
@@ -82,7 +78,7 @@ function News() {
           <div className="flex flex-wrap justify-center w-full py-4 gap-4">
             <Image.PreviewGroup>
               <Image
-                src={`${import.meta.env.VITE_API_URL}${record.thumbnailUrl}`}
+                src={`${import.meta.env.VITE_API_URL}${record.thumbnail}`}
                 alt={record.title}
                 className="rounded-md"
                 width={160}
@@ -100,13 +96,9 @@ function News() {
       render(_, record) {
         return (
           <div className="flex flex-col justify-between gap-2">
-            <div
+            <Link
               className="flex items-center"
-              onClick={() => {
-                setOpenEditModal(true)
-                setIdNews(record.id)
-              }
-              }
+              to={`/tin-tuc/${record.id}`}
             >
               <Button
                 className="w-full"
@@ -115,7 +107,7 @@ function News() {
               >
                 <p className="text-white">Xem</p>
               </Button>
-            </div>
+            </Link>
             <div className="flex items-center min-w-[120px]">
               <Button
                 icon={<CloseIcon />}
@@ -163,13 +155,13 @@ function News() {
         <div className="m-auto">
           <span className="px-6 p-2 rounded-full bg-[#84571B] uppercase font-bold text-white text-2xl">Quản lý Tin tức</span>
         </div>
-        <div
+        <Link
           className="bg-[#84571B] rounded-md cursor-pointer h-full px-4 py-2 flex items-center justify-center hover:opacity-80 duration-300 text-white"
-          onClick={() => setOpenAddModal(true)}
+          to="/tin-tuc/tao-moi"
         >
           Thêm mới
           <PlusIcon color="white" />
-        </div>
+        </Link>
       </div>
       <ConfigProvider
         theme={{
@@ -202,8 +194,6 @@ function News() {
           scroll={{ y: 600 }}
         />
       </ConfigProvider>
-      {openAddModal && <AddNews open={openAddModal} onClose={() => setOpenAddModal(false)} setRefreshKey={setRefreshKey} />}
-      {openEditModal && <UpdateNews open={openEditModal} onClose={() => setOpenEditModal(false)} id={idNews} setRefreshKey={setRefreshKey} />}
       {openDeleteModal && <DeleteNews open={openDeleteModal} onCancel={() => setOpenDeleteModal(false)} id={idNews} setRefreshKey={setRefreshKey} />}
     </div>
   )

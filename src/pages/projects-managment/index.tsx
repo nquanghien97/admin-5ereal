@@ -4,14 +4,13 @@ import { useEffect, useState } from 'react';
 import type { ProjectsEntity } from '../../entities/projects';
 import CloseIcon from '../../assets/icons/CloseIcon';
 import PlusIcon from '../../assets/icons/PlusIcon';
-import AddProjects from './actions/AddProjects';
-import UpdateProjects from './actions/UpdateProjects';
 import DeleteProjects from './actions/DeleteProjects';
 import { getAllProjects } from '../../services/projects';
 import withAuth from '../../hocs/withAuth';
 import { formatDate } from '../../utils/formatDate';
 import ArticleIcon from '../../assets/icons/ArticleIcon';
 import Header from './Header';
+import { Link } from 'react-router-dom';
 
 export interface SearchFormType {
   title?: string;
@@ -24,9 +23,7 @@ export interface SearchFormType {
 
 function Projects() {
 
-  const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openAddModal, setOpenAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ProjectsEntity[]>([]);
   const [searchForm, setSearchForm] = useState<SearchFormType>({
@@ -193,13 +190,9 @@ function Projects() {
       render(_, record) {
         return (
           <div className="flex flex-col justify-between gap-2">
-            <div
+            <Link
+              to={`/du-an/${record.id}`}
               className="flex items-center"
-              onClick={() => {
-                setOpenEditModal(true)
-                setIdProjects(record.id)
-              }
-              }
             >
               <Button
                 className="w-full"
@@ -208,7 +201,7 @@ function Projects() {
               >
                 <p className="text-white">Xem</p>
               </Button>
-            </div>
+            </Link>
             <div className="flex items-center min-w-[120px]">
               <Button
                 icon={<CloseIcon />}
@@ -256,13 +249,13 @@ function Projects() {
         <div className="m-auto">
           <span className="px-6 p-2 rounded-full bg-[#84571B] uppercase text-white font-bold text-2xl">Quản lý Dự án</span>
         </div>
-        <div
+        <Link
+          to="/du-an/tao-moi"
           className="bg-[#84571B] rounded-md cursor-pointer h-full px-4 py-2 flex items-center justify-center hover:opacity-80 duration-300 text-white"
-          onClick={() => setOpenAddModal(true)}
         >
           Thêm mới
           <PlusIcon color="white" />
-        </div>
+        </Link>
       </div>
       <ConfigProvider
         theme={{
@@ -295,8 +288,6 @@ function Projects() {
           scroll={{ y: 600 }}
         />
       </ConfigProvider>
-      {openAddModal && <AddProjects open={openAddModal} onClose={() => setOpenAddModal(false)} setRefreshKey={setRefreshKey} />}
-      {openEditModal && <UpdateProjects open={openEditModal} onClose={() => setOpenEditModal(false)} id={idProjects} setRefreshKey={setRefreshKey} />}
       {openDeleteModal && <DeleteProjects open={openDeleteModal} onCancel={() => setOpenDeleteModal(false)} id={idProjects} setRefreshKey={setRefreshKey} />}
     </div>
   )
