@@ -17,7 +17,6 @@ function NewsSection({ orderIndex, onRemoveSection, dataSections, setListSection
 
   const [isOpenModalAddImage, setIsOpenModalAddImage] = useState(false);
   const [image, setImage] = useState<File | null>(null);
-
   return (
     <>
       <section className="max-w-4xl m-auto px-4 mb-8 relative">
@@ -29,9 +28,9 @@ function NewsSection({ orderIndex, onRemoveSection, dataSections, setListSection
             <MinusIcon title="Xóa section" />
           </div>
         </div>
-        {image ? (
+        {(image || dataSections?.imageUrl) ? (
           <div className="relative">
-            <img src={URL.createObjectURL(image)} alt="uploaded" className="m-auto" />
+            <img src={dataSections?.imageUrl ? (import.meta.env.VITE_API_URL + dataSections?.imageUrl) : URL.createObjectURL(image!)} alt="uploaded" className="m-auto" />
             <div
               className="absolute top-2 right-2 w-8 h-8 bg-black p-1 rounded-full hover:bg-[#464141] duration-300 cursor-pointer flex items-center justify-center"
               onClick={() => setIsOpenModalAddImage(true)}
@@ -52,7 +51,7 @@ function NewsSection({ orderIndex, onRemoveSection, dataSections, setListSection
                 </div>
               </div>
             </div >
-            <img src="/default.jpg" alt="default" className="m-auto" />
+            <img src={'/default.jpg'} alt="default" className="m-auto" />
           </div >
         )
         }

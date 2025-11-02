@@ -45,10 +45,10 @@ function ThuVienHinhAnh(props: ThuVienHinhAnhProps) {
             />
           </Form.Item>
         </div>
-        <div className="grid grid-cols-3">
+        <div className="grid grid-cols-3 mb-2">
           {listImagesThuVienHinhAnh.map((image, index) => (
             <div key={index} className="h-[280px] w-full">
-              <Image src={URL.createObjectURL(image)} alt="image" className="border !h-full !w-full object-cover" />
+              <Image src={image.name || URL.createObjectURL(image)} alt="image" className="border !h-full !w-full object-cover" />
             </div>
           ))}
         </div>

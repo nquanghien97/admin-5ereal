@@ -15,16 +15,16 @@ const router = createBrowserRouter(
     <>
       <Route>
         <Route path="/login" element={<Login />} />
-        <Route path="/tin-tuc/tao-moi" element={<CreateNews />} />
-        <Route path="/tin-tuc/:id" element={<UpdateNews />} />
-        <Route path="/du-an/tao-moi" element={<CreateProject />} />
-        <Route path="/du-an/:id" element={<UpdateProject />} />
       </Route>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/tin-tuc" element={<News />} />
+        <Route path="/tin-tuc/tao-moi" element={<CreateNews />} />
+        <Route path="/tin-tuc/:id" element={<UpdateNews />} />
         <Route path="/quan-ly-nguoi-dung" element={<UsersManagement />} />
         <Route path="/quan-ly-du-an" element={<ProjectsWithAuth />} />
+        <Route path="/du-an/tao-moi" element={<CreateProject />} />
+        <Route path="/du-an/:id" element={<UpdateProject />} />
       </Route>
     </>
   )

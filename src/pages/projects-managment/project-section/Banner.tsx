@@ -2,6 +2,7 @@ import { Button, Image, Input, Modal } from 'antd'
 import PlusIcon from '../../../assets/icons/PlusIcon'
 import { useState } from 'react';
 import MinusIcon from '../../../assets/icons/MinusIcon';
+import type { ProjectsEntity } from '../../../entities/projects';
 
 interface BannerProps {
   name?: string
@@ -9,10 +10,12 @@ interface BannerProps {
   setThumnail: React.Dispatch<React.SetStateAction<File | null>>
   description: string
   setDescription: React.Dispatch<React.SetStateAction<string>>
+  currentProject?: ProjectsEntity
+  setCurrentProject?: React.Dispatch<React.SetStateAction<ProjectsEntity | undefined>>
 }
 
 function Banner(props: BannerProps) {
-  const { description, name, setThumnail, thumbnail, setDescription } = props
+  const { description, name, setThumnail, thumbnail, setDescription, currentProject, setCurrentProject } = props
 
   const [isOpenModalAddImage, setIsOpenModalAddImage] = useState(false);
   const [image, setImage] = useState<File | null>(null)
@@ -20,25 +23,26 @@ function Banner(props: BannerProps) {
     <>
 
       <section className="mb-8 z-0 relative">
-        {thumbnail &&
+        {(thumbnail || currentProject?.thumbnailUrl) &&
           (
             <section className="relative">
               <div className="absolute top-2 right-2 z-[10]">
-                {thumbnail && (
-                  <div
-                    className="bg-red-500 p-1 rounded-full hover:bg-red-600 duration-300 cursor-pointer flex items-center justify-center"
-                    onClick={() => {
-                      setThumnail(null);
-                      setImage(null)
-                      setDescription('')
-                    }}
-                  >
-                    <MinusIcon title="Xóa hình ảnh" className="cursor-pointer" color='white' />
-                  </div>
-                )}
+                <div
+                  className="bg-red-500 p-1 rounded-full hover:bg-red-600 duration-300 cursor-pointer flex items-center justify-center"
+                  onClick={() => {
+                    setThumnail(null);
+                    setImage(null)
+                    setDescription('')
+                    if (setCurrentProject) {
+                      setCurrentProject(prev => prev ? { ...prev, thumbnailUrl: '' } : prev)
+                    }
+                  }}
+                >
+                  <MinusIcon title="Xóa hình ảnh" className="cursor-pointer" color='white' />
+                </div>
               </div>
               <div className="relative">
-                <img src={URL.createObjectURL(thumbnail)} alt="uploaded" className="m-auto max-h-[600px] w-full" />
+                <img src={currentProject?.thumbnailUrl ? (import.meta.env.VITE_API_URL + currentProject?.thumbnailUrl) : URL.createObjectURL(thumbnail!)} alt="uploaded" className="m-auto max-h-[600px] w-full" />
                 <div className="absolute inset-0 lg:top-1/2 background-linear-blue" />
                 <div className={`absolute lg:left-[10%] bottom-[10%] text-white w-1/4`}>
                   <div>
@@ -55,7 +59,7 @@ function Banner(props: BannerProps) {
             </section>
           )
         }
-        {!thumbnail && (
+        {(!thumbnail && !currentProject?.thumbnailUrl) && (
           <div className="relative border border-dashed rounded-md mb-4 cursor-pointer hover:opacity-80 duration-300 overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-1/2 flex flex-col">
               <span>Thêm hình ảnh</span>

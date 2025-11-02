@@ -29,11 +29,11 @@ function NormalSection({ orderIndex, onRemoveSection, dataSections, setListSecti
             <MinusIcon title="Xóa section" />
           </div>
         </div>
-        {image ? (
+        {(image || dataSections?.imageUrl) ? (
           <div className="relative flex gap-4">
             {orderIndex % 2 === 0 && (
               <div className="w-full">
-                <img src={URL.createObjectURL(image)} alt="uploaded" className="m-auto w-full" />
+                <img src={dataSections?.imageUrl ? (import.meta.env.VITE_API_URL + dataSections.imageUrl) : URL.createObjectURL(image!)} alt="uploaded" className="m-auto w-full" />
               </div>
             )}
             <div className="w-full">
@@ -69,7 +69,7 @@ function NormalSection({ orderIndex, onRemoveSection, dataSections, setListSecti
             </div>
             {orderIndex % 2 !== 0 && (
               <div className="w-full">
-                <img src={URL.createObjectURL(image)} alt="uploaded" className="m-auto w-full" />
+                <img src={dataSections?.imageUrl ? (import.meta.env.VITE_API_URL + dataSections.imageUrl) : URL.createObjectURL(image!)} alt="uploaded" className="m-auto w-full" />
               </div>
             )}
             <div

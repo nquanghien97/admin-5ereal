@@ -261,7 +261,7 @@ function CreateProject() {
             <div className="flex justify-center">
               <div
                 className="w-10 h-10 bg-amber-500 rounded-md cursor-pointer flex items-center justify-center hover:opacity-80 duration-300 text-white"
-                onClick={() => setListSections(prev => [...prev, { orderIndex: listSections.length + 1, type: 'NORMAL' }])}
+                onClick={() => setListSections(prev => [...prev, { orderIndex: prev.length + 1, type: 'NORMAL' } as ProjectsSectionsEntity])}
               >
                 <PlusIcon title="Thêm section" />
               </div>

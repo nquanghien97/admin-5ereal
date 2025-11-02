@@ -1,19 +1,22 @@
 import { Button, Image, Input, Switch } from "antd"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ClockIcon from "../../../assets/icons/ClockIcon";
 import NewsSection from "../news-section";
 import PlusIcon from "../../../assets/icons/PlusIcon";
-import type { NewsSectionEntity } from "../../../entities/news";
+import type { NewsEntity, NewsSectionEntity } from "../../../entities/news";
 import { Editor } from "@tinymce/tinymce-react";
 import MinusIcon from "../../../assets/icons/MinusIcon";
-import { updateNews } from "../../../services/news";
-import { useParams } from "react-router-dom";
+import { getNews, updateNews } from "../../../services/news";
+import { useNavigate, useParams } from "react-router-dom";
+import { useNotification } from "../../../hooks/useNotification";
 
 function UpdateNews() {
 
   const { id } = useParams()
+  const notification = useNotification();
+  const navigate = useNavigate()
 
-  // const [currentNews, setCurrentNews] = useState<NewsSectionEntity[]>([])
+  const [currentNews, setCurrentNews] = useState<NewsEntity>()
 
   const [isHotNews, setIsHotNews] = useState(false);
   const [title, setTitle] = useState('');
@@ -25,6 +28,19 @@ function UpdateNews() {
   const day = date.getDate();
   const month = date.getMonth() + 1;
   const year = date.getFullYear();
+
+  useEffect(() => {
+    (async () => {
+      const res = await getNews(Number(id))
+      const currentNews = res.data.news as NewsEntity
+      setIsHotNews(currentNews.isHotNews)
+      setTitle(currentNews.title)
+      setSummary(currentNews.summary)
+      // setThumbnail(currentNews.thumbnailUrl)
+      setListSections(currentNews.news_sections)
+      setCurrentNews(res.data.news)
+    })()
+  }, [id])
 
   const onSubmit = async () => {
     try {
@@ -48,6 +64,8 @@ function UpdateNews() {
       if(id) {
         await updateNews(Number(id), formData)
       }
+      navigate('/tin-tuc')
+      notification.success('Cập nhật bản tin thành công')
     } catch (err) {
       console.log(err)
     }
@@ -55,8 +73,8 @@ function UpdateNews() {
 
   return (
     <div className="max-w-7xl m-auto py-8">
-      <h1 className="text-center mb-4 text-4xl font-semibold">Tạo mới bản tin</h1>
-      <div className="fixed top-2 right-2">
+      <h1 className="text-center mb-4 text-4xl font-semibold">Cập nhật bản tin</h1>
+      <div className="fixed top-24 right-2 z-[100]">
         <Button type="primary" onClick={onSubmit}>Lưu bản tin</Button>
       </div>
       <div className="px-4">
@@ -110,7 +128,7 @@ function UpdateNews() {
           <div className="flex-1">
             <div>
               <div className="flex justify-end mb-2">
-                {!thumbnail && (
+                {(!thumbnail && !currentNews?.thumbnail) && (
                   <label htmlFor="thumbnail">
                     <span className="px-4 py-2 rounded-lg bg-[#1677ff] hover:bg-[#4096ff] duration-300 text-white cursor-pointer">Thêm hình ảnh</span>
                   </label>
@@ -125,18 +143,19 @@ function UpdateNews() {
                   className="hidden"
                   id="thumbnail"
                 />
-                {thumbnail && (
+                {(thumbnail || currentNews?.thumbnail) && (
                   <div
                     className="bg-red-500 rounded-full hover:bg-red-600 duration-300 cursor-pointer flex items-center justify-center"
                     onClick={() => {
-                      setThumbnail(null);
-                    }}
+                        setThumbnail(null);
+                        setCurrentNews(pre => pre ? { ...pre, thumbnail: undefined } : undefined);
+                      }}
                   >
                     <MinusIcon title="Xóa hình ảnh" className="cursor-pointer" color='white' />
                   </div>
                 )}
               </div>
-              {thumbnail && <Image src={URL.createObjectURL(thumbnail)} alt="uploaded" className="m-auto" />}
+              {(thumbnail || currentNews?.thumbnail) && <Image src={import.meta.env.VITE_API_URL + currentNews?.thumbnail || URL.createObjectURL(thumbnail!)} alt="uploaded" className="m-auto" />}
             </div>
           </div>
         </div>

@@ -49,8 +49,8 @@ function DeleteNews(props: DeleteProductProps) {
       footer={false}
       wrapClassName='!p-0'
     >
-      <div className="w-full text-center p-3 h-[60px] leading-[36px] bg-[#84571B] rounded-t-lg uppercase font-bold">{`Bạn muốn xóa Bản tin này không`}</div>
-      <div className="flex justify-center gap-12 p-4">
+      <div className="w-full text-center uppercase font-bold mb-4">{`Bạn muốn xóa Bản tin này không`}</div>
+      <div className="flex justify-center gap-12">
         <Button type="primary" danger onClick={onCancel}>Hủy</Button>
         <Button type="primary" onClick={onSubmit} loading={loading}>Xác nhận</Button>
       </div>
