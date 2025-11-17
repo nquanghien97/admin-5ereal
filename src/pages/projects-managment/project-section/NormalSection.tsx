@@ -1,217 +1,145 @@
-import { Button, Modal, Image } from "antd";
-import { useState } from "react";
-import MinusIcon from "../../../assets/icons/MinusIcon";
-import EditIcon from "../../../assets/icons/EditIcon";
-import PlusIcon from "../../../assets/icons/PlusIcon";
-import { Editor } from "@tinymce/tinymce-react";
-import type { ProjectsSectionsEntity } from "../../../entities/projects";
-
-interface ProjectSectionProps {
-  orderIndex: number;
-  onRemoveSection?: () => void;
-  dataSections?: ProjectsSectionsEntity;
-  setListSections: React.Dispatch<React.SetStateAction<ProjectsSectionsEntity[]>>
+import { Button, Image, Input } from "antd"
+import { Editor } from "@tinymce/tinymce-react"
+import { DeleteOutlined, PictureOutlined } from '@ant-design/icons'
+import type { CreateProjectDTO, ProjectSectionDTO } from "../../../entities/projects"
+interface NormalSectionProps {
+  orderIndex: number
+  dataSections: ProjectSectionDTO
+  setData: React.Dispatch<React.SetStateAction<CreateProjectDTO>>
+  onRemoveSection: () => void
+  onSelectImage: () => void // Function để mở modal chọn ảnh
+  orderNormalSection: number
 }
 
-function NormalSection({ orderIndex, onRemoveSection, dataSections, setListSections }: ProjectSectionProps) {
+function NormalSection(props: NormalSectionProps) {
+  const { orderIndex, dataSections, setData, onRemoveSection, onSelectImage, orderNormalSection } = props
 
-  const [isOpenModalAddImage, setIsOpenModalAddImage] = useState(false);
-  const [image, setImage] = useState<File | null>(null);
+  // Update content của section này
+  const handleContentChange = (newContent: string) => {
+    setData((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section, idx: number) =>
+        idx === orderIndex - 1
+          ? { ...section, content: newContent }
+          : section
+      )
+    }))
+  }
+
+  // Xóa ảnh của section này
+  const handleRemoveImage = () => {
+    setData((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section, idx: number) =>
+        idx === orderIndex - 1
+          ? { ...section, section_images: [] }
+          : section
+      )
+    }))
+  }
 
   return (
-    <>
-      <section className="max-w-7xl m-auto p-4 mb-8 relative border border-dashed">
-        <div className="flex justify-center absolute -top-0 -right-10">
-          <div
-            className="w-10 h-10 bg-red-600 rounded-md cursor-pointer flex items-center justify-center hover:opacity-80 duration-300 text-white"
-            onClick={onRemoveSection}
-          >
-            <MinusIcon title="Xóa section" />
-          </div>
-        </div>
-        {(image || dataSections?.imageUrl) ? (
-          <div className="relative flex gap-4">
-            {orderIndex % 2 === 0 && (
-              <div className="w-full">
-                <img src={dataSections?.imageUrl ? (import.meta.env.VITE_API_URL + dataSections.imageUrl) : URL.createObjectURL(image!)} alt="uploaded" className="m-auto w-full" />
+    <div className="border rounded-lg p-6 mb-6 bg-white shadow-sm">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold text-gray-700">
+          Section {orderNormalSection + 1}
+        </h3>
+        <Button
+          danger
+          icon={<DeleteOutlined />}
+          onClick={onRemoveSection}
+        >
+          Xóa section
+        </Button>
+      </div>
+
+      {/* Content Editor */}
+      <div className="mb-6">
+        <label className="block font-medium mb-2">Nội dung</label>
+        <Editor
+          apiKey="hkoepxco9p2gme5kius6axtlk3n83yberu5a59m56l7dhgn3"
+          value={dataSections.content}
+          onEditorChange={handleContentChange}
+          init={{
+            height: 300,
+            menubar: false,
+            extended_valid_elements: "iframe[src|frameborder|style|scrolling|class|width|height|name|align]",
+            valid_elements: '*[*]',
+            plugins: [
+              'advlist autolink lists link image charmap print preview anchor',
+              'searchreplace visualblocks code fullscreen',
+              'insertdatetime media paste code help wordcount textcolor',
+              'table media paste',
+            ],
+            toolbar:
+              'undo redo | formatselect | bold italic backcolor | ' +
+              'alignleft aligncenter alignright alignjustify | ' +
+              'bullist numlist outdent indent | table | forecolor | removeformat | ' +
+              'image media',
+          }}
+        />
+      </div>
+
+      {/* Image Section */}
+      <div>
+        <label className="block font-medium mb-2">Hình ảnh</label>
+        {dataSections.section_images.length !== 0 ? (
+          <div>
+            {dataSections.section_images.map((image, index) => (
+              <div className="relative inline-block group mb-2" key={index}>
+                <Image
+                  src={`${import.meta.env.VITE_API_URL}${image.image.url}`}
+                  alt={image.image.alt || `section-${orderIndex}`}
+                  preview={true}
+                  className="rounded-lg"
+                />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                  <Button
+                    type="primary"
+                    onClick={onSelectImage}
+                  >
+                    Thay đổi
+                  </Button>
+                  <Button
+                    danger
+                    onClick={handleRemoveImage}
+                  >
+                    Xóa
+                  </Button>
+                </div>
               </div>
-            )}
-            <div className="w-full">
-              <p className="mb-2">Nội dung section</p>
-              <Editor
-                apiKey="hkoepxco9p2gme5kius6axtlk3n83yberu5a59m56l7dhgn3"
-                value={dataSections?.content}
-                onEditorChange={(newContent) => {
-                  setListSections(prev => {
-                    const newList = [...prev];
-                    newList[orderIndex - 1] = { ...newList[orderIndex - 1], content: newContent };
-                    return newList;
-                  });
-                }}
-                init={{
-                  height: 280,
-                  menubar: false,
-                  extended_valid_elements: "iframe[src|frameborder|style|scrolling|class|width|height|name|align]",
-                  valid_elements: '*[*]',
-                  plugins: [
-                    'advlist autolink lists link image charmap print preview anchor',
-                    'searchreplace visualblocks code fullscreen',
-                    'insertdatetime media paste code help wordcount textcolor',
-                    'table media paste',
-                  ],
-                  toolbar:
-                    'undo redo | formatselect | bold italic backcolor | ' +
-                    'alignleft aligncenter alignright alignjustify | ' +
-                    'bullist numlist outdent indent | table | forecolor | removeformat | ' +
-                    'image media',
-                }}
-              />
-            </div>
-            {orderIndex % 2 !== 0 && (
-              <div className="w-full">
-                <img src={dataSections?.imageUrl ? (import.meta.env.VITE_API_URL + dataSections.imageUrl) : URL.createObjectURL(image!)} alt="uploaded" className="m-auto w-full" />
-              </div>
-            )}
-            <div
-              className="absolute top-2 right-2 w-8 h-8 bg-black p-1 rounded-full hover:bg-[#464141] duration-300 cursor-pointer flex items-center justify-center"
-              onClick={() => setIsOpenModalAddImage(true)}
-            >
-              <EditIcon color='white' />
+            ))}
+            <div className="flex gap-1">
+              <label htmlFor="">Caption:</label>
+              <Input value={dataSections.caption} onChange={(e) => setData(pre => ({
+                ...pre,
+                sections: pre.sections.map((section, idx: number) =>
+                  idx === orderIndex - 1
+                    ? { ...section, caption: e.target.value }
+                    : section
+                )
+              }))} />
             </div>
           </div>
         ) : (
-          <div className="flex gap-4">
-            {orderIndex % 2 === 0 && (
-              <div className="relative border border-dashed rounded-md cursor-pointer hover:opacity-80 duration-300 overflow-hidden w-full">
-                <div className="absolute top-1/2 left-1/2 -translate-1/2 flex flex-col">
-                  <span>Thêm hình ảnh</span>
-                  <div className="flex justify-center">
-                    <div
-                      className="bg-black p-2 rounded-full hover:bg-[#464141] duration-300 cursor-pointer"
-                      onClick={() => setIsOpenModalAddImage(true)}
-                    >
-                      <PlusIcon color='white' />
-                    </div>
-                  </div>
-                </div >
-                <img src="/default.jpg" alt="default" className="m-auto" />
-              </div >
-            )}
-            <div className="w-full">
-              <p className="mb-2 text-center text-lg">Nội dung section</p>
-              <Editor
-                apiKey="hkoepxco9p2gme5kius6axtlk3n83yberu5a59m56l7dhgn3"
-                value={dataSections?.content}
-                onEditorChange={(newContent) => {
-                  setListSections(prev => {
-                    const newList = [...prev];
-                    newList[orderIndex - 1] = { ...newList[orderIndex - 1], content: newContent };
-                    return newList;
-                  });
-                }}
-                init={{
-                  height: 280,
-                  menubar: false,
-                  extended_valid_elements: "iframe[src|frameborder|style|scrolling|class|width|height|name|align]",
-                  valid_elements: '*[*]',
-                  plugins: [
-                    'advlist autolink lists link image charmap print preview anchor',
-                    'searchreplace visualblocks code fullscreen',
-                    'insertdatetime media paste code help wordcount textcolor',
-                    'table media paste',
-                  ],
-                  toolbar:
-                    'undo redo | formatselect | bold italic backcolor | ' +
-                    'alignleft aligncenter alignright alignjustify | ' +
-                    'bullist numlist outdent indent | table | forecolor | removeformat | ' +
-                    'image media',
-                }}
-              />
-            </div>
-            {orderIndex % 2 !== 0 && (
-              <div className="relative border border-dashed rounded-md cursor-pointer hover:opacity-80 duration-300 overflow-hidden w-full">
-                <div className="absolute top-1/2 left-1/2 -translate-1/2 flex flex-col">
-                  <span>Thêm hình ảnh</span>
-                  <div className="flex justify-center">
-                    <div
-                      className="bg-black p-2 rounded-full hover:bg-[#464141] duration-300 cursor-pointer"
-                      onClick={() => setIsOpenModalAddImage(true)}
-                    >
-                      <PlusIcon color='white' />
-                    </div>
-                  </div>
-                </div >
-                <img src="/default.jpg" alt="default" className="m-auto" />
-              </div >
-            )}
-          </div>
-        )
-        }
-      </section >
-      <Modal
-        title="Thêm hình ảnh"
-        open={isOpenModalAddImage}
-        onCancel={() => setIsOpenModalAddImage(false)}
-        footer={null}
-      >
-        <div>
-          <div className="flex justify-between">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setImage(file);
-              }}
-            />
-            {image && (
-              <div
-                className="bg-red-500 p-1 rounded-full hover:bg-red-600 duration-300 cursor-pointer flex items-center justify-center"
-                onClick={() => {
-                  setImage(null);
-                  setListSections(prev => {
-                    const newList = [...prev];
-                    newList[orderIndex - 1] = { ...newList[orderIndex - 1], image: undefined };
-                    return newList;
-                  });
-                }}
-              >
-                <MinusIcon title="Xóa hình ảnh" className="cursor-pointer" color='white' />
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-lg p-8 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 inline-block"
+            onClick={onSelectImage}
+          >
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <div className="bg-blue-500 p-3 rounded-full">
+                  <PictureOutlined className="text-white text-2xl" />
+                </div>
               </div>
-            )}
+              <p className="text-gray-600 font-medium">Thêm hình ảnh</p>
+              <p className="text-sm text-gray-400 mt-1">Click để chọn ảnh</p>
+            </div>
           </div>
-          {image && <Image src={URL.createObjectURL(image)} alt="uploaded" className="m-auto py-4" />}
-          <div className="flex justify-end mt-4 gap-4">
-            <Button
-              type="primary"
-              danger
-              onClick={() => {
-                setIsOpenModalAddImage(false);
-              }}
-            >
-              Hủy
-            </Button>
-            {image && (
-              <Button
-                type="primary"
-                onClick={() => {
-                  if (image) {
-                    setListSections(prev => {
-                      const newList = [...prev];
-                      newList[orderIndex - 1] = { ...newList[orderIndex - 1], image };
-                      return newList;
-                    });
-                    setIsOpenModalAddImage(false);
-                  }
-                }}
-              >
-                Tải lên
-              </Button>
-            )}
-          </div>
-        </div>
-      </Modal>
-    </>
+        )}
+      </div>
+    </div>
   )
 }
 

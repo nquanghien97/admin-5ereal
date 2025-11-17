@@ -7,7 +7,7 @@
 
   color-scheme: light dark;
   color: black;
-  background-color: #ccc;
+  background: linear-gradient(90deg, #fef6e8, #fffcf6);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -64,4 +64,8 @@
 .ant-image {
   height: 100%;
   width: 100%;
+}
+
+.bg-custom {
+  background: linear-gradient(90deg, #fef6e8, #fffcf6);
 }

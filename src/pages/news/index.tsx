@@ -1,7 +1,6 @@
 import type { TableColumnsType } from 'antd'
 import { Button, Table, ConfigProvider, Image } from 'antd'
 import { useEffect, useState } from 'react';
-import type { NewsEntity } from '../../entities/news';
 import CloseIcon from '../../assets/icons/CloseIcon';
 import PlusIcon from '../../assets/icons/PlusIcon';
 import DeleteNews from './actions/DeleteNews';
@@ -11,6 +10,7 @@ import { formatDate } from '../../utils/formatDate';
 import ArticleIcon from '../../assets/icons/ArticleIcon';
 import Header from './Header';
 import { Link } from 'react-router-dom';
+import type { NewsEntity } from '../../entities/news';
 
 export interface SearchFormType {
   search?: string;
@@ -78,7 +78,7 @@ function News() {
           <div className="flex flex-wrap justify-center w-full py-4 gap-4">
             <Image.PreviewGroup>
               <Image
-                src={`${import.meta.env.VITE_API_URL}${record.thumbnail}`}
+                src={`${import.meta.env.VITE_API_URL}${record.thumbnail.url}`}
                 alt={record.title}
                 className="rounded-md"
                 width={160}
@@ -133,7 +133,7 @@ function News() {
       setLoading(true);
       try {
         const res = await getAllNews(searchForm);
-        setData(res.data.data);
+        setData(res.data.news);
         setToal(res.data.paging.total)
       } catch (err) {
         console.log(err);

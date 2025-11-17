@@ -1,4 +1,5 @@
 import api from "../config/api";
+import type { CreateNewsDTO } from "../entities/news";
 
 export function getAllNews({ page, pageSize, search } : { page?: number, pageSize?: number, search?: string}) {
   const params = new URLSearchParams();
@@ -8,7 +9,7 @@ export function getAllNews({ page, pageSize, search } : { page?: number, pageSiz
   return api.get(`/news?${params.toString()}`)
 }
 
-export function createNews(data: FormData) {
+export function createNews(data: CreateNewsDTO) {
   return api.post('news', data)
 }
 
@@ -16,7 +17,7 @@ export function getNews(id: number) {
   return api.get(`/news/${id}`)
 }
 
-export function updateNews(id: number, data: FormData) {
+export function updateNews(id: number, data: CreateNewsDTO) {
   return api.put(`/news/${id}`, data)
 }
 

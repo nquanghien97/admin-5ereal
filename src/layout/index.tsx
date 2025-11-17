@@ -26,7 +26,7 @@ function Layout() {
         </div>
       </div>
       <div className="h-[calc(h-screen-160px)] w-[160px] z-[100]">
-        <div className="bg-white w-[160px] opacity-85 fixed top-[60px] bottom-0 left-0 bg-no-repeat py-2">
+        <div className="bg-white border-r w-[160px] opacity-85 fixed top-[60px] bottom-0 left-0 bg-no-repeat py-2">
           {MenuSidebar.map((menu) => (
             me && menu.allowRole.includes(me?.role) && (
               <div className="flex items-center justify-center p-2" key={menu.path}>

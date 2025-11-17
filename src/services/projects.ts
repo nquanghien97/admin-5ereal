@@ -1,4 +1,5 @@
 import api from "../config/api";
+import type { CreateProjectDTO } from "../entities/projects";
 
 export function getAllProjects({ page, pageSize, search } : { page?: number, pageSize?: number, search?: string}) {
   const params = new URLSearchParams();
@@ -8,7 +9,7 @@ export function getAllProjects({ page, pageSize, search } : { page?: number, pag
   return api.get(`/projects?${params.toString()}`)
 }
 
-export function createProjects(data: FormData) {
+export function createProjects(data: CreateProjectDTO) {
   return api.post('/projects', data)
 }
 
@@ -16,15 +17,11 @@ export function getProjects(id: number) {
   return api.get(`/projects/${id}`)
 }
 
-export function updateProjects(id: number, data: FormData) {
+export function updateProjects(id: number, data: CreateProjectDTO) {
   return api.put(`/projects/${id}`, data)
 }
 
 export function deleteProjects(id: number) {
   return api.delete(`/projects/${id}`)
-}
-
-export function uploadImageProjects(data: FormData) {
-  return api.post('/upload-images-projects', data)
 }
 

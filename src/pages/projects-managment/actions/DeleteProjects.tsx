@@ -23,7 +23,7 @@ function DeleteProjects(props: DeleteProductProps) {
     setLoading(true);
     try {
       await deleteProjects(id)
-      notification.success('Xóa Bản tin thành công')
+      notification.success('Xóa Dự án thành công')
       onCancel();
       setRefreshKey(pre => !pre)
     } catch (err) {
@@ -33,7 +33,7 @@ function DeleteProjects(props: DeleteProductProps) {
           navigate('/login')
           notification.error(err.message)
         } else {
-          notification.error('Xóa Bản tin thất bại')
+          notification.error('Xóa Dự án thất bại')
         }
       }
     } finally {
@@ -49,7 +49,7 @@ function DeleteProjects(props: DeleteProductProps) {
       footer={false}
       wrapClassName='!p-0'
     >
-      <div className="w-full text-center p-3 h-[60px] leading-[36px] bg-[#84571B] rounded-t-lg uppercase font-bold">{`Bạn muốn xóa Bản tin này không`}</div>
+      <div className="w-full text-center rounded-t-lg uppercase font-bold">{`Bạn muốn xóa Dự án này không`}</div>
       <div className="flex justify-center gap-12 p-4">
         <Button type="primary" danger onClick={onCancel}>Hủy</Button>
         <Button type="primary" onClick={onSubmit} loading={loading}>Xác nhận</Button>

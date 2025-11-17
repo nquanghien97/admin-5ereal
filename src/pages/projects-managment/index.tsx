@@ -1,7 +1,7 @@
 import type { TableColumnsType } from 'antd'
 import { Button, Table, ConfigProvider, Image } from 'antd'
 import { useEffect, useState } from 'react';
-import type { ProjectsEntity } from '../../entities/projects';
+import type { ProjectEntity } from '../../entities/projects';
 import CloseIcon from '../../assets/icons/CloseIcon';
 import PlusIcon from '../../assets/icons/PlusIcon';
 import DeleteProjects from './actions/DeleteProjects';
@@ -25,7 +25,7 @@ function Projects() {
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<ProjectsEntity[]>([]);
+  const [data, setData] = useState<ProjectEntity[]>([]);
   const [searchForm, setSearchForm] = useState<SearchFormType>({
     page: 1,
     pageSize: 10,
@@ -85,7 +85,7 @@ function Projects() {
           <div className="flex flex-wrap justify-center w-full py-4 gap-4">
             <Image.PreviewGroup>
               <Image
-                src={`${import.meta.env.VITE_API_URL}${record.thumbnailUrl}`}
+                src={`${import.meta.env.VITE_API_URL}${record.thumbnail.url}`}
                 alt={record.title}
                 className="rounded-md"
                 width={160}
@@ -93,16 +93,6 @@ function Projects() {
               />
             </Image.PreviewGroup>
           </div>
-        )
-      }
-    },
-    {
-      title: "Nội dung",
-      key: 3,
-      width: 300,
-      render(_, record) {
-        return (
-          <div className="max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap" dangerouslySetInnerHTML={{ __html: record.content }} />
         )
       }
     },
@@ -150,7 +140,7 @@ function Projects() {
       setLoading(true);
       try {
         const res = await getAllProjects(searchForm);
-        setData(res.data.data);
+        setData(res.data.projects);
         setToal(res.data.paging.total)
       } catch (err) {
         console.log(err);

@@ -23,7 +23,7 @@ function Header(props: HeaderProps) {
           name="search"
         >
           <Input
-            placeholder="Tìm kiếm tên, tài khoản"
+            placeholder="Tìm kiếm tên, số điện thoại"
             className="py-2"
             rootClassName="border-[1px] border-[#84571B] rounded-lg"
             allowClear

@@ -1,333 +1,604 @@
-import { Button, Input, Form } from 'antd';
-import PlusIcon from '../../../assets/icons/PlusIcon';
-import Banner from '../project-section/Banner';
+import { Button, Input, Form, Image } from 'antd';
 import { useEffect, useState } from 'react';
-import type { ProjectsEntity, ProjectsSectionsEntity } from '../../../entities/projects';
+import type { CreateProjectDTO, ProjectSectionImageEntity, SECTION_TYPE } from '../../../entities/projects';
+import { useNotification } from '../../../hooks/useNotification';
+import PlusIcon from '../../../assets/icons/PlusIcon';
+import ImagesManagement from '../../../components/imagesManagement';
 import NormalSection from '../project-section/NormalSection';
-import TienIch from '../project-section/TienIch';
-import ThuVienHinhAnh from '../project-section/ThuVienHinhAnh';
-import { useWatch } from 'antd/es/form/Form';
+import GallerySection from '../project-section/GallerySection';
+import { PictureOutlined } from '@ant-design/icons'
+import type { MediaDTO } from '../../../entities/media';
 import { getProjects, updateProjects } from '../../../services/projects';
-import { buildProjectFormData } from '../../../utils/buildProjectFormData';
 import { useParams } from 'react-router-dom';
 
-function UpdateProject() {
+const initValues: CreateProjectDTO = {
+  name: '',
+  fullName: '',
+  location: '',
+  totalArea: 0,
+  constructionRate: 0,
+  floorHeightMin: 0,
+  floorHeightMax: 0,
+  type: '',
+  numberOfUnits: 0,
+  investor: '',
+  thumbnail: null,
+  thumbnailId: -1,
+  backgroundOverviewId: null,
+  sections: []
+}
 
+type ImageFieldType =
+  | 'thumbnail'
+  | 'backgroundOverview'
+  | { type: 'NORMAL', sectionIndex: number }
+  | { type: 'TIEN_ICH', sectionIndex: number }
+  | { type: 'THU_VIEN_HINH_ANH', sectionIndex: number }
+
+
+function UpdateProject() {
   const { id } = useParams()
 
-  const [currentProject, setCurrentProject] = useState<ProjectsEntity>()
-  const [thumbnail, setThumbnail] = useState<File | null>(null)
-  const [descriptionBanner, setDescriptionBanner] = useState('')
-  const [listSections, setListSections] = useState<ProjectsSectionsEntity[]>([]);
-  const [listImagesTienIch, setListImagesTienIch] = useState<File[]>([])
-  const [listImagesThuVienHinhAnh, setListImagesThuVienHinhAnh] = useState<File[]>([])
+  const [data, setData] = useState<CreateProjectDTO>(initValues);
+  const [openImagesManagement, setOpenImagesManagement] = useState(false)
+  const [currentImageField, setCurrentImageField] = useState<ImageFieldType | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMultiple, setIsMultiple] = useState(false)
 
-
-  const [form] = Form.useForm()
+  const notification = useNotification();
+  // const navigate = useNavigate();
+  const [form] = Form.useForm<CreateProjectDTO>();
 
   useEffect(() => {
     (async () => {
       const res = await getProjects(Number(id))
-      const currentProject = res.data.project as ProjectsEntity
-      setCurrentProject(currentProject)
-      form.setFieldValue('name', currentProject.name)
-      form.setFieldValue('fullName', currentProject.fullName)
-      form.setFieldValue('location', currentProject.location)
-      form.setFieldValue('totalArea', currentProject.totalArea)
-      form.setFieldValue('floorHeightMax', currentProject.floorHeightMax)
-      form.setFieldValue('floorHeightMin', currentProject.floorHeightMin)
-      form.setFieldValue('type', currentProject.type)
-      form.setFieldValue('constructionRate', currentProject.constructionRate)
-      form.setFieldValue('numberOfUnits', currentProject.numberOfUnits)
-      form.setFieldValue('investor', currentProject.investor)
-
-      setListImagesTienIch(currentProject.project_images.filter(img => img.type === 'TIEN_ICH').map(img => {
-        return new File([], import.meta.env.VITE_API_URL + img.imageUrl)
-      }))
-      form.setFieldValue('description_tien_ich', currentProject.project_sections.find(img => img.type === 'TIEN_ICH')?.description || '')
-      
-      setListImagesThuVienHinhAnh(currentProject.project_images.filter(img => img.type === 'THU_VIEN_HINH_ANH').map(img => {
-        return new File([], import.meta.env.VITE_API_URL + img.imageUrl)
-      }))
-      form.setFieldValue('description_thu_vien_hinh_anh', currentProject.project_sections.find(img => img.type === 'THU_VIEN_HINH_ANH')?.description || '')
-      setListSections(currentProject.project_sections)
-      setCurrentProject(res.data.project)
+      const project = res.data.project as CreateProjectDTO
+      setData(project)
+      form.setFieldsValue({
+        name: project.name,
+        fullName: project.fullName,
+        location: project.location,
+        totalArea: project.totalArea,
+        floorHeightMax: project.floorHeightMax,
+        floorHeightMin: project.floorHeightMin,
+        type: project.type,
+        constructionRate: project.constructionRate,
+        numberOfUnits: project.numberOfUnits,
+        investor: project.investor,
+      })
     })()
   }, [form, id])
 
-  const dataTienIch = listImagesTienIch.map((data, index) => (
-    {
-      image: data,
-      type: 'TIEN_ICH',
-      description: form.getFieldValue('description_tien_ich'),
-      orderIndex: index + 1,
-      imageKey: `tienIchImage_${index}`
-    }
-  ))
+  const openImageManager = (field: ImageFieldType, isMultiple: boolean) => {
+    setIsMultiple(isMultiple)
+    setCurrentImageField(field)
+    setOpenImagesManagement(true)
+  }
 
-  const dataThuVienHinhAnh = listImagesThuVienHinhAnh.map((data, index) => (
-    {
-      image: data,
-      type: 'THU_VIEN_HINH_ANH',
-      description: form.getFieldValue('description_thu_vien_hinh_anh'),
-      orderIndex: index + 1,
-      imageKey: `thuVienImage_${index}`
-    }
-  ))
+  const handleSelectImage = (image: MediaDTO | MediaDTO[]) => {
+    if (!currentImageField) return
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (data: any) => {
+    // Thumbnail - single image
+    if (currentImageField === 'thumbnail') {
+      const selectedImage = Array.isArray(image) ? image[0] : image
+      setData(prev => ({ ...prev, thumbnail: selectedImage }))
+    }
+    // Section images - có thể single hoặc multiple
+    else if (typeof currentImageField === 'object') {
+      const { type, sectionIndex } = currentImageField
+
+      setData(prev => ({
+        ...prev,
+        sections: prev.sections.map((section, idx) => {
+          if (idx !== sectionIndex) return section
+
+          // Convert image thành array
+          const selectedImages = Array.isArray(image) ? image : [image]
+          const images: ProjectSectionImageEntity[] = selectedImages.map(s => ({
+            sectionId: section.orderIndex,
+            imageId: s.id,
+            orderIndex: section.orderIndex,
+            image: s,
+          }))
+
+          // Xử lý theo type
+          if (type === 'NORMAL') {
+            // Replace image (single)
+            return {
+              ...section,
+              section_images: [
+                // ...section.section_images,
+                ...images
+              ]
+            }
+          }
+          else if (type === 'TIEN_ICH') {
+            // Append images (multiple)
+            return {
+              ...section,
+              section_images: [
+                ...section.section_images,
+                ...images
+              ]
+            }
+          }
+          else if (type === 'THU_VIEN_HINH_ANH') {
+            // Append images (multiple)
+            return {
+              ...section,
+              section_images: [
+                ...section.section_images,
+                ...images
+              ]
+            }
+          }
+          return section
+        })
+      }))
+    }
+
+    setOpenImagesManagement(false)
+    setCurrentImageField(null)
+  }
+
+  const addSection = (type: SECTION_TYPE) => {
+    setData(prev => ({
+      ...prev,
+      sections: [
+        ...prev.sections,
+        {
+          orderIndex: prev.sections.length + 1,
+          content: '',
+          caption: '',
+          type,
+          section_images: [],
+        }
+      ]
+    }))
+  }
+
+  const removeSection = (index: number) => {
+    setData(prev => ({
+      ...prev,
+      sections: prev.sections.filter((_, i) => i !== index)
+    }))
+  }
+
+  const onSubmit = async (dataForm: CreateProjectDTO) => {
+    setIsSubmitting(true)
     try {
-      const submitData = {
-        ...data,
-        descriptionBanner,
-        thumbnail,
-        listSections: listSections.map((s, index) => ({
-          ...s,
-          imageKey: `sectionImage_${index}`
-        })),
-        dataTienIch,
-        dataThuVienHinhAnh
+      if (!data.thumbnail) {
+        notification.warning('Thumnail là bắt buộc!')
+        return;
       }
-      const formData = buildProjectFormData(submitData)
-      await updateProjects(Number(id), formData)
+      await updateProjects(Number(id), { ...data, ...dataForm, thumbnailId: data.thumbnail.id })
+      notification.success('Cập nhật dự án thành công')
+      // navigate('/quan-ly-du-an')
     } catch (err) {
       console.log(err)
+      notification.error('có lỗi xảy ra')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="py-4">
-      <h1 className="text-center mb-4 text-4xl font-semibold">Cập nhật dự án</h1>
-      <Form form={form} onFinish={onSubmit}>
-        <div className="fixed top-2 right-2 z-[100]">
-          <Button type="primary" htmlType='submit'>Lưu dự án</Button>
-        </div>
-        <Form.Item
-          label="Tên dự án"
-          name="name"
-          className="!px-4"
-          rules={[
-            {
-              required: true,
-              message: "Trường này là bắt buộc"
-            }
-          ]}
-        >
-          <Input
-            placeholder="Tên dự án"
-          />
-        </Form.Item>
-        <div>
-          <Banner
-            name={useWatch('name', form)}
-            setThumnail={setThumbnail}
-            thumbnail={thumbnail}
-            setDescription={setDescriptionBanner}
-            description={descriptionBanner}
-            currentProject={currentProject}
-            setCurrentProject={setCurrentProject}
-          />
-          <div className="max-w-7xl mx-auto p-4 border border-dashed mb-8">
-            <h2 className="text-3xl md:text-5xl font-[800] text-[#0F3E5A] text-center mb-4">TỔNG QUAN DỰ ÁN</h2>
-            <Form.Item
-              label="Tên pháp lý"
-              className="!px-4"
-              name="fullName"
-              rules={[
-                {
-                  required: true,
-                  message: "Trường này là bắt buộc"
-                }
-              ]}
-            >
-              <Input
-                placeholder="Tên pháp lý"
-              />
-            </Form.Item>
-            <ul className="text-[#003c7a] grid grid-cols-2">
-              <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
-                <Form.Item
-                  label="Vị trí"
-                  className="!px-4"
-                  name="location"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Trường này là bắt buộc"
-                    }
-                  ]}
-                >
-                  <Input
-                    placeholder="Vị trí"
-                  />
-                </Form.Item>
-              </li>
-              <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
-                <Form.Item
-                  label="Tổng diện tích"
-                  className="!px-4"
-                  name="totalArea"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Trường này là bắt buộc"
-                    }
-                  ]}
-                >
-                  <Input
-                    placeholder="Tổng diện tích"
-                  />
-                </Form.Item>
-              </li>
-              <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
-                <Form.Item
-                  label="Tầng cao nhất"
-                  className="!px-4"
-                  name="floorHeightMax"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Trường này là bắt buộc"
-                    }
-                  ]}
-                >
-                  <Input
-                    placeholder="Tầng cao nhất"
-                  />
-                </Form.Item>
-              </li>
-              <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
-                <Form.Item
-                  label="Tầng thấp nhất"
-                  className="!px-4"
-                  name="floorHeightMin"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Trường này là bắt buộc"
-                    }
-                  ]}
-                >
-                  <Input
-                    placeholder="Tầng thấp nhất"
-                  />
-                </Form.Item>
-              </li>
-              <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
-                <Form.Item
-                  label="Loại hình"
-                  className="!px-4"
-                  name="type"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Trường này là bắt buộc"
-                    }
-                  ]}
-                >
-                  <Input
-                    placeholder="Loại hình"
-                  />
-                </Form.Item>
-              </li>
-              <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
-                <Form.Item
-                  label="Mật độ xây dựng"
-                  className="!px-4"
-                  name="constructionRate"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Trường này là bắt buộc"
-                    }
-                  ]}
-                >
-                  <Input
-                    placeholder="Mật độ xây dựng"
-                  />
-                </Form.Item>
-              </li>
-              <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
-                <Form.Item
-                  label="Tổng số căn"
-                  className="!px-4"
-                  name="numberOfUnits"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Trường này là bắt buộc"
-                    }
-                  ]}
-                >
-                  <Input
-                    placeholder="Tổng số căn"
-                  />
-                </Form.Item>
-              </li>
-              <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
-                <Form.Item
-                  label="Chủ đầu tư"
-                  className="!px-4"
-                  name="investor"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Trường này là bắt buộc"
-                    }
-                  ]}
-                >
-                  <Input
-                    placeholder="Chủ đầu tư"
-                  />
-                </Form.Item>
-              </li>
-            </ul>
+    <>
+      <div className="py-4 bg-custom">
+        <h1 className="text-center mb-4 text-4xl font-semibold">Cập nhật dự án</h1>
+        <Form form={form} onFinish={onSubmit}>
+          <div className="fixed top-16 right-4 z-[100]">
+            <Button loading={isSubmitting} type="primary" htmlType='submit'>Lưu dự án</Button>
           </div>
-          <div className="mb-8">
-            {listSections.filter(section => section.type === 'NORMAL').map((section, index) => (
-              <NormalSection
-                key={index + 1}
-                orderIndex={index + 1}
-                onRemoveSection={() => setListSections(prev => prev.filter((_, i) => i !== index))}
-                dataSections={section}
-                setListSections={setListSections}
-              />
-            ))}
-            <div className="flex justify-center">
-              <div
-                className="w-10 h-10 bg-amber-500 rounded-md cursor-pointer flex items-center justify-center hover:opacity-80 duration-300 text-white"
-                onClick={() =>
-                  setListSections(prev => [
-                    ...prev,
-                    {
-                      orderIndex: prev.length + 1,
-                      type: 'NORMAL',
-                      projectId: currentProject?.id ?? 0,
-                      id: 0,
-                      title: '',
-                      description: ''
-                    } as ProjectsSectionsEntity
-                  ])
-                }
-              >
-                <PlusIcon title="Thêm section" />
-              </div>
+          <Form.Item
+            label="Tên dự án"
+            name="name"
+            className="!px-4"
+            rules={[
+              {
+                required: true,
+                message: "Trường này là bắt buộc"
+              }
+            ]}
+          >
+            <Input
+              placeholder="Tên dự án"
+            />
+          </Form.Item>
+          <div className="flex-1 mb-4 px-4">
+            <p className="mb-2 font-medium">Ảnh thumbnail</p>
+            <div className="h-[600px]">
+              {data.thumbnail ? (
+                <div className="relative border rounded-md overflow-hidden h-full group">
+                  <Image
+                    src={`${import.meta.env.VITE_API_URL}${data.thumbnail.url}`}
+                    alt={data.thumbnail.alt || 'thumbnail'}
+                    preview={false}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      type="primary"
+                      onClick={() => openImageManager('thumbnail', false)}
+                    >
+                      Thay đổi
+                    </Button>
+                    <Button
+                      danger
+                      onClick={() => setData(prev => ({ ...prev, thumbnail: null }))}
+                    >
+                      Xóa
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="relative border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-amber-500 hover:bg-gray-50 transition-all duration-300 h-full flex items-center justify-center"
+                  onClick={() => openImageManager('thumbnail', false)}
+                >
+                  <div className="text-center">
+                    <div className="flex justify-center mb-2">
+                      <div className="bg-amber-500 p-3 rounded-full hover:bg-amber-600 transition-colors">
+                        <PlusIcon color='white' width={24} height={24} />
+                      </div>
+                    </div>
+                    <p className="text-gray-500">Thêm ảnh thumbnail</p>
+                    <p className="text-sm text-gray-400 mt-1">Click để chọn ảnh</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+          <div className="px-4 max-w-7xl mx-auto">
+            <div className="p-4 border border-dashed mb-8">
+              <h2 className="text-3xl md:text-5xl font-[800] text-[#0F3E5A] text-center mb-4">TỔNG QUAN DỰ ÁN</h2>
+              <Form.Item
+                label="Tên pháp lý"
+                className="!px-4"
+                name="fullName"
+                rules={[
+                  {
+                    required: true,
+                    message: "Trường này là bắt buộc"
+                  }
+                ]}
+              >
+                <Input
+                  placeholder="Tên pháp lý"
+                />
+              </Form.Item>
+              <ul className="text-[#003c7a] grid grid-cols-2">
+                <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
+                  <Form.Item
+                    label="Vị trí"
+                    className="!px-4"
+                    name="location"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường này là bắt buộc"
+                      }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Vị trí"
+                    />
+                  </Form.Item>
+                </li>
+                <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
+                  <Form.Item
+                    label="Tổng diện tích"
+                    className="!px-4"
+                    name="totalArea"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường này là bắt buộc"
+                      }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Tổng diện tích"
+                      type='number'
+                    />
+                  </Form.Item>
+                </li>
+                <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
+                  <Form.Item
+                    label="Tầng cao nhất"
+                    className="!px-4"
+                    name="floorHeightMax"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường này là bắt buộc"
+                      }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Tầng cao nhất"
+                      type='number'
+                    />
+                  </Form.Item>
+                </li>
+                <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
+                  <Form.Item
+                    label="Tầng thấp nhất"
+                    className="!px-4"
+                    name="floorHeightMin"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường này là bắt buộc"
+                      }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Tầng thấp nhất"
+                      type='number'
+                    />
+                  </Form.Item>
+                </li>
+                <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
+                  <Form.Item
+                    label="Loại hình"
+                    className="!px-4"
+                    name="type"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường này là bắt buộc"
+                      }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Loại hình"
+                    />
+                  </Form.Item>
+                </li>
+                <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
+                  <Form.Item
+                    label="Mật độ xây dựng"
+                    className="!px-4"
+                    name="constructionRate"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường này là bắt buộc"
+                      }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Mật độ xây dựng"
+                      type='number'
+                    />
+                  </Form.Item>
+                </li>
+                <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
+                  <Form.Item
+                    label="Tổng số căn"
+                    className="!px-4"
+                    name="numberOfUnits"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường này là bắt buộc"
+                      }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Tổng số căn"
+                      type='number'
+                    />
+                  </Form.Item>
+                </li>
+                <li className="mb-4 lg:mb-2 max-lg:flex max-lg:items-center gap-2">
+                  <Form.Item
+                    label="Chủ đầu tư"
+                    className="!px-4"
+                    name="investor"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Trường này là bắt buộc"
+                      }
+                    ]}
+                  >
+                    <Input
+                      placeholder="Chủ đầu tư"
+                    />
+                  </Form.Item>
+                </li>
+              </ul>
+            </div>
+            <ImagesManagement
+              open={openImagesManagement}
+              onClose={() => {
+                setOpenImagesManagement(false)
+                setCurrentImageField(null)
+              }}
+              multiple={isMultiple}
+              onUploadSuccess={handleSelectImage}
+            />
+            <div className="px-8 border border-dashed mb-8">
+              {(data.sections.filter(s => s.type === 'NORMAL').length > 0) && (
+                <div className="mb-8">
+                  <h2 className="text-2xl font-semibold mb-4">Các section nội dung</h2>
+                  {data.sections.filter(s => s.type === 'NORMAL').map((section, index) => {
+                    const realIndex = data.sections.findIndex(s => s === section);
+                    return (
+                      <NormalSection
+                        key={realIndex}
+                        orderNormalSection={index}
+                        orderIndex={realIndex + 1}
+                        onRemoveSection={() => removeSection(index)}
+                        dataSections={section}
+                        setData={setData}
+                        onSelectImage={() => openImageManager({
+                          type: 'NORMAL',
+                          sectionIndex: realIndex
+                        }, false)}
+                      />
+                    )
+                  })}
+                </div>
+              )}
 
-          <TienIch
-            listImagesTienIch={listImagesTienIch}
-            setListImagesTienIch={setListImagesTienIch}
-          />
+              <div className="flex justify-center py-4">
+                <div
+                  className="w-12 h-12 bg-amber-500 rounded-md cursor-pointer flex items-center justify-center hover:bg-amber-600 transition-colors duration-300 text-white shadow-md"
+                  onClick={() => addSection('NORMAL')}
+                  title="Thêm section"
+                >
+                  <PlusIcon width={24} height={24} />
+                </div>
+              </div>
+            </div>
 
-          <ThuVienHinhAnh
-            listImagesThuVienHinhAnh={listImagesThuVienHinhAnh}
-            setListImagesThuVienHinhAnh={setListImagesThuVienHinhAnh}
-          />
-        </div>
-      </Form>
-    </div>
+            {/* section tiện ích */}
+            <div className="p-8 border border-dashed mb-8">
+              <h2 className="text-2xl font-semibold mb-4">Section Tiện ích</h2>
+              <div
+                className="mb-4 border-2 border-dashed border-gray-300 rounded-lg p-8 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 inline-block"
+                onClick={() => {
+                  // Kiểm tra xem đã có section TIEN_ICH chưa
+                  const tienIchSectionIndex = data.sections.findIndex(s => s.type === 'TIEN_ICH');
+
+                  if (tienIchSectionIndex === -1) {
+                    // Nếu chưa có → thêm mới
+                    addSection('TIEN_ICH');
+                    // Sau khi thêm, mở image manager với index mới
+                    setTimeout(() => {
+                      openImageManager({
+                        type: 'TIEN_ICH',
+                        sectionIndex: data.sections.length // sẽ là index mới sau khi thêm
+                      }, true);
+                    }, 0);
+                  } else {
+                    // Nếu đã có → mở bình thường
+                    openImageManager({
+                      type: 'TIEN_ICH',
+                      sectionIndex: tienIchSectionIndex
+                    }, true);
+                  }
+                }}
+              >
+                <div className="text-center">
+                  <div className="flex justify-center mb-2">
+                    <div className="bg-blue-500 p-3 rounded-full">
+                      <PictureOutlined className="text-white text-2xl" />
+                    </div>
+                  </div>
+                  <p className="text-gray-600 font-medium">Thêm hình ảnh</p>
+                  <p className="text-sm text-gray-400 mt-1">Click để chọn ảnh</p>
+                </div>
+              </div>
+              {(data.sections.length > 0) && (
+                <div className="">
+                  {data.sections.filter(s => s.type === 'TIEN_ICH').map((section, index) => (
+                    <>
+                      <div className="mb-2">
+                        <Input
+                          placeholder='Tiêu đề'
+                          value={section.title || ''}
+                          onChange={(e) => {
+                            setData((prev) => ({
+                              ...prev,
+                              sections: prev.sections.map((section) =>
+                                section.type === 'TIEN_ICH'
+                                  ? { ...section, title: e.target.value }
+                                  : section
+                              )
+                            }))
+                          }}
+                        />
+                      </div>
+                      <GallerySection
+                        key={index}
+                        dataSections={section}
+                        setData={setData}
+                        type='TIEN_ICH'
+                      />
+                    </>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* section thư viện hình ảnh */}
+            <div className="p-8 border border-dashed">
+              <h2 className="text-2xl font-semibold mb-4">Section Thư viện hình ảnh</h2>
+              <div
+                className="mb-4 border-2 border-dashed border-gray-300 rounded-lg p-8 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 inline-block"
+                onClick={() => {
+                  // Kiểm tra xem đã có section THU_VIEN_HINH_ANH chưa
+                  const tienIchSectionIndex = data.sections.findIndex(s => s.type === 'THU_VIEN_HINH_ANH');
+
+                  if (tienIchSectionIndex === -1) {
+                    // Nếu chưa có → thêm mới
+                    addSection('THU_VIEN_HINH_ANH');
+                    // Sau khi thêm, mở image manager với index mới
+                    setTimeout(() => {
+                      openImageManager({
+                        type: 'THU_VIEN_HINH_ANH',
+                        sectionIndex: data.sections.length // sẽ là index mới sau khi thêm
+                      }, true);
+                    }, 0);
+                  } else {
+                    // Nếu đã có → mở bình thường
+                    openImageManager({
+                      type: 'THU_VIEN_HINH_ANH',
+                      sectionIndex: tienIchSectionIndex
+                    }, true);
+                  }
+                }}
+              >
+                <div className="text-center">
+                  <div className="flex justify-center mb-2">
+                    <div className="bg-blue-500 p-3 rounded-full">
+                      <PictureOutlined className="text-white text-2xl" />
+                    </div>
+                  </div>
+                  <p className="text-gray-600 font-medium">Thêm hình ảnh</p>
+                  <p className="text-sm text-gray-400 mt-1">Click để chọn ảnh</p>
+                </div>
+              </div>
+              {(data.sections.length > 0) && (
+                <div className="">
+                  {data.sections.filter(s => s.type === 'THU_VIEN_HINH_ANH').map((section, index) => (
+                    <>
+                      <div className="mb-2">
+                        <Input
+                          placeholder='Tiêu đề'
+                          value={section.title || ''}
+                          onChange={(e) => {
+                            setData((prev) => ({
+                              ...prev,
+                              sections: prev.sections.map((section) =>
+                                section.type === 'THU_VIEN_HINH_ANH'
+                                  ? { ...section, title: e.target.value }
+                                  : section
+                              )
+                            }))
+                          }}
+                        />
+                      </div>
+                      <GallerySection
+                        key={index}
+                        dataSections={section}
+                        setData={setData}
+                        type='THU_VIEN_HINH_ANH'
+                      />
+                    </>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </Form>
+      </div>
+
+    </>
   )
 }
 

@@ -12,6 +12,8 @@ import PlusIcon from '../../assets/icons/PlusIcon'
 import CreateUser from './actions/CreateUser'
 import EditIcon from '../../assets/icons/EditIcon'
 import UpdateUser from './actions/UpdateUser'
+import ChangePasswordUser from './actions/ChangePasswordUser'
+import ChangePasswordIcon from '../../assets/icons/ChangePasswordIcon'
 
 const roleOptions = {
   STAFF: 'Nhân viên',
@@ -33,6 +35,7 @@ function UsersManagement() {
   const [user, setUser] = useState<UserEntity>();
   const [isOpenCreateUser, setIsOpenCreateUser] = useState(false);
   const [isOpenUpdateUser, setIsOpenUpdateUser] = useState(false);
+  const [isOpenChangePasswordUser, setIsOpenChangePasswordUser] = useState(false);
 
   const columns: TableColumnsType<UserEntity> = [
     {
@@ -79,7 +82,7 @@ function UsersManagement() {
       width: 150,
       render(_, user) {
         return (
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center">
               <Button
                 icon={<EditIcon />}
@@ -107,6 +110,20 @@ function UsersManagement() {
                 <p>Xóa</p>
               </Button>
             </div>
+            <div className="flex items-center">
+              <Button
+                icon={<ChangePasswordIcon />}
+                type="primary"
+                danger
+                className="w-full !bg-emerald-600"
+                onClick={() => {
+                  setIsOpenChangePasswordUser(true)
+                  setUser(user)
+                }}
+              >
+                <p>Đổi mật khẩu</p>
+              </Button>
+            </div>
           </div>
         )
       },
@@ -125,7 +142,6 @@ function UsersManagement() {
         page: paging.page,
         pageSize: paging.pageSize,
       })
-      console.log(res)
       setUsers(res.data.data);
       setPaging(prev => ({ ...prev, total: res.data.paging.total }))
       setLoading(false)
@@ -140,6 +156,7 @@ function UsersManagement() {
   return (
     <>
       {user && <UpdateUser open={isOpenUpdateUser} onClose={() => setIsOpenUpdateUser(false)} setRefreshKey={setRefreshKey} user={user} />}
+      {user && <ChangePasswordUser open={isOpenChangePasswordUser}  onClose={() => setIsOpenChangePasswordUser(false)} user={user} />}
       <CreateUser open={isOpenCreateUser} onClose={() => setIsOpenCreateUser(false)} setRefreshKey={setRefreshKey} />
       <div className="p-4 relative">
         <Header setSearchForm={setSearchForm} setLoading={setLoading} />

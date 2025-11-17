@@ -58,7 +58,7 @@ function UpdateUser(props: UpdateUserProps) {
       className='!p-0 !w-4/6 !top-4'
       footer={false}
     >
-      <div className="w-full text-center p-3 h-[60px] leading-[36px] bg-[#84571B] rounded-t-lg uppercase font-bold">Cập nhật thông tin {user.fullName}</div>
+      <div className="w-full text-center text-xl uppercase font-bold">Cập nhật thông tin {user.fullName}</div>
       <div className="p-4">
         <Form form={form} className="flex flex-col gap-6" onFinish={onFinish}>
           <div className="flex items-center h-[40px]">

@@ -1,3 +1,4 @@
+import type { MediaEntity } from "./media";
 import type { UserEntity } from "./user";
 
 export interface NewsEntity {
@@ -6,9 +7,9 @@ export interface NewsEntity {
   news_sections: NewsSectionEntity[];
   slug: string;
   summary: string;
-  thumbnail?: string;
+  thumbnail?: MediaEntity | null;
   title: string;
-  author: UserEntity
+  author: Pick<UserEntity, 'id' | 'fullName'>
   authorId: number;
   createdAt: Date;
 }
@@ -16,7 +17,18 @@ export interface NewsEntity {
 export interface NewsSectionEntity {
   orderIndex: number;
   caption?: string;
-  image?: File;
-  imageUrl?: string;
+  image?: MediaEntity | null;
+  imageId?: number;
   content?: string;
+}
+
+
+export interface CreateNewsDTO {
+  isHotNews: boolean;
+  sections: NewsSectionEntity[];
+  summary: string;
+  thumbnail: MediaEntity | null;
+  thumbnailId: number
+  title: string;
+  createdAt: Date;
 }

@@ -21,7 +21,7 @@ export function deleteUser(id: number) {
 }
 
 export function changePassword({ id, password } : { id: number, password: string }) {
-  return api.put(`/users/change-password/${id}`, { password })
+  return api.put(`/change-password-user`, { password, userId: id })
 }
 
 export function getMe() {
