@@ -3,13 +3,13 @@ export const MenuSidebar = [
     key: 1,
     title: 'Quản lý Tin tức',
     path: 'tin-tuc',
-    allowRole: ['ADMIN']
+    allowRole: ['ADMIN', 'STAFF']
   },
   {
     key: 2,
     title: 'Quản lý Dự án',
     path: 'quan-ly-du-an',
-    allowRole: ['ADMIN']
+    allowRole: ['ADMIN', 'STAFF']
   },
   {
     key: 3,
